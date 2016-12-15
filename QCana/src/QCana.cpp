@@ -87,7 +87,7 @@ int main(Int_t argc,char *argv[],char *envp[] ) {
 	else {
 		QA.OpenFile(InputSignalFile[0]); // just one spectrum
 	}
-
+	QA.GetEntry(0);
     QA.CreateCanvas();
     QA.CreateHistos();
     QA.Loop();

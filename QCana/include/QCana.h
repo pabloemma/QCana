@@ -24,6 +24,8 @@
 #include <TStyle.h>  // so we can use gStyle
 #include <TTimeStamp.h>
 #include <TString.h>
+#include <TF1.h>
+#include <Math/MinimizerOptions.h>
 
 
 // Header file for the classes stored in the TTree if any.
@@ -32,6 +34,7 @@
 #include <fstream>
 #include <string>
 #include <stdio.h>
+#include <math.h>
 #include <map>
 
 
@@ -107,6 +110,8 @@ public :
    TTree *tree;
    TH1D *histo1;
    TCanvas *can1;
+   TF1 *FitH; // Fit function
+   TString rootfilename;
 
 
 
@@ -125,6 +130,9 @@ public :
    virtual int 		CreateHistos();
    virtual int		DrawHistos();
    Int_t 	OpenFile(TString);
+   static Double_t FitFcn(Double_t * , Double_t *);
+   virtual int  Fitak();
+
 
 };
 
@@ -158,16 +166,63 @@ Int_t QCana::CreateCanvas(){
 Int_t QCana::CreateHistos(){
 	// Sets up the histograms
 	// very simple at this point all fixed values
-	histo1 = new TH1D("histo1","QCurve", 401,213.-200,213.+200);
+	histo1 = new TH1D("histo1",rootfilename, ScanPoints,FreqCenter-((ScanPoints-1.)/2.*FreqStep),FreqCenter+((ScanPoints-1.)/2.*FreqStep));
+	histo1->Sumw2();
 	return 0;
 }
 
 Int_t QCana::DrawHistos(){
 	// draw histograms
 	can1->cd();
+	//histo1->Draw("HIST P");
+	gStyle->SetOptFit(1111);
 	histo1->Draw();
+	Fitak();
+	can1->Update();
 	return 0;
 }
+Int_t QCana::Fitak(){
+	// this is a convolution fit as from example on root tutorials
+	// it is a convolution of a 3deg pol and a sinh(x) function
+	// set fit environment
+	ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit","Minimize");
+	ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
+	ROOT::Math::MinimizerOptions::SetDefaultTolerance(.1);
+	ROOT::Math::MinimizerOptions::SetDefaultPrecision(1.e-08);
+	ROOT::Math::MinimizerOptions::SetDefaultMaxIterations(100000);
+	ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(100000);
+
+	Int_t Npar = 3;
+	FitH= new TF1("FitH",FitFcn,FreqCenter-((ScanPoints-1.)/2.*FreqStep),FreqCenter+((ScanPoints-1.)/2.*FreqStep),Npar);
+	//FitH->SetParameters(1.,1.,1.);
+	FitH->SetParameters(1e07,-1.e+05,2000);
+	//FitH= new TF1("FitH","pol3",FreqCenter-((ScanPoints-1.)/2.*FreqStep),FreqCenter+((ScanPoints-1.)/2.*FreqStep),Npar);
+
+//	histo1->Fit(FitH,"VMR");
+	// get first estimae from root poly fit
+	histo1->Fit("pol2");
+	TF1 *fitroot = histo1->GetFunction("pol2");
+	FitH->SetParameters(fitroot->GetParameter(0),fitroot->GetParameter(1),fitroot->GetParameter(2));
+	histo1->Fit(FitH,"MR");
+
+
+
+
+
+	return 0;
+}
+
+Double_t QCana::FitFcn(Double_t *x , Double_t *par){
+	// start with simple polynomial
+
+	//Double_t result = par[0]+par[1]*x[0]+par[2]*pow(x[0],2.)+par[3]*pow(x[0],3.);
+	Double_t result = par[0]+par[1]*x[0]+par[2]*pow(x[0],2.);
+
+	return result;
+}
+
+
+
 
 Int_t QCana::GetEntry(Long64_t entry)
 {
@@ -266,7 +321,7 @@ Int_t QCana::Cut(Long64_t entry)
 int QCana::OpenFile(TString rootfile){
 
 	// oepn file and initialize tree
-
+     rootfilename = rootfile;
      f = new TFile(rootfile);
 
      f->GetObject("NMRtree",tree);
@@ -327,12 +382,12 @@ void QCana::Loop()
       Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
-      Double_t step_size =.002;
-      Double_t freq_temp = 213.-(200.*step_size);
+
+      Double_t freq_temp = FreqCenter-((ScanPoints-1.)/2.*FreqStep);
 
       for (UInt_t j = 0; j < array->size(); ++j) {
      	  histo1->Fill(freq_temp,array->at(j));
-     	  freq_temp +=step_size;
+     	  freq_temp +=FreqStep;
       }
 
 
