@@ -25,6 +25,7 @@
 #include <TTimeStamp.h>
 #include <TString.h>
 #include <TF1.h>
+#include <TMath.h>
 #include <Math/MinimizerOptions.h>
 
 
@@ -111,6 +112,7 @@ public :
    TH1D *histo1;
    TCanvas *can1;
    TF1 *FitH; // Fit function
+   TF1 *FitH1; // Fit function with sinh
    TString rootfilename;
 
 
@@ -131,6 +133,7 @@ public :
    virtual int		DrawHistos();
    Int_t 	OpenFile(TString);
    static Double_t FitFcn(Double_t * , Double_t *);
+   static Double_t FitFcn1(Double_t * , Double_t *);  //poly and sinH
    virtual int  Fitak();
 
 
@@ -194,16 +197,23 @@ Int_t QCana::Fitak(){
 
 	Int_t Npar = 3;
 	FitH= new TF1("FitH",FitFcn,FreqCenter-((ScanPoints-1.)/2.*FreqStep),FreqCenter+((ScanPoints-1.)/2.*FreqStep),Npar);
-	//FitH->SetParameters(1.,1.,1.);
-	FitH->SetParameters(1e07,-1.e+05,2000);
-	//FitH= new TF1("FitH","pol3",FreqCenter-((ScanPoints-1.)/2.*FreqStep),FreqCenter+((ScanPoints-1.)/2.*FreqStep),Npar);
-
-//	histo1->Fit(FitH,"VMR");
 	// get first estimae from root poly fit
 	histo1->Fit("pol2");
 	TF1 *fitroot = histo1->GetFunction("pol2");
 	FitH->SetParameters(fitroot->GetParameter(0),fitroot->GetParameter(1),fitroot->GetParameter(2));
 	histo1->Fit(FitH,"MR");
+
+/*	FitH1= new TF1("FitH1",FitFcn1,FreqCenter-((ScanPoints-1.)/2.*FreqStep),FreqCenter+((ScanPoints-1.)/2.*FreqStep),Npar+2);
+	FitH1->SetParameters(fitroot->GetParameter(0),fitroot->GetParameter(1),fitroot->GetParameter(2),1.,1.);
+	histo1->Fit(FitH1,"MR");
+	FitH1->SetLineColor(1);
+    //FitH1->Draw("SAME");
+
+     */
+
+
+	// Now subtract the function from the histo
+
 
 
 
@@ -217,6 +227,15 @@ Double_t QCana::FitFcn(Double_t *x , Double_t *par){
 
 	//Double_t result = par[0]+par[1]*x[0]+par[2]*pow(x[0],2.)+par[3]*pow(x[0],3.);
 	Double_t result = par[0]+par[1]*x[0]+par[2]*pow(x[0],2.);
+
+	return result;
+}
+Double_t QCana::FitFcn1(Double_t *x , Double_t *par){
+	// start polynomial and sinh
+
+	//Double_t result = par[0]+par[1]*x[0]+par[2]*pow(x[0],2.)+par[3]*pow(x[0],3.);
+	Double_t result = par[0]+par[1]*x[0]+par[2]*pow(x[0],2.) +par[3]*TMath::SinH(((x[0]-213.)-par[4]));
+	//cout<<x[0]-213<<"  "<<par[4]<<endl;
 
 	return result;
 }
