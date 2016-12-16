@@ -139,7 +139,7 @@ public :
    virtual int 		CreateHistos();
    virtual int		DrawHistos();
    virtual int 		SubtractFit(TH1D *);
-   virtual int      PrintOutput();
+   virtual int      PrintOutput(std::string);
    Int_t 	OpenFile(TString);
    static Double_t FitFcn(Double_t * , Double_t *);
    static Double_t FitFcn1(Double_t * , Double_t *);  //poly and sinH
@@ -493,7 +493,7 @@ void QCana::Loop()
 
  }
 
-Int_t QCana::PrintOutput(){
+Int_t QCana::PrintOutput(std::string QCfilename){
 	// prints output of all the parameters
 	// Get Fit parameters
 
@@ -509,8 +509,8 @@ Int_t QCana::PrintOutput(){
 	cout<<"*"<<endl;
 	cout<<"*"<<endl;
 	cout.width(15);
-    cout<<"Coil number "<<NMRchan<<"  ,   ";
-    ofil<<NMRchan<<",";
+    cout<<"Qcurve "<<QCfilename<<" Coil number "<<NMRchan<<"  ,   ";
+    ofil<<QCfilename<<","<<NMRchan<<",";
 
 
     for(Int_t k=0; k<5;k++){

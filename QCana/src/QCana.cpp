@@ -87,11 +87,18 @@ int main(Int_t argc,char *argv[],char *envp[] ) {
 	else {
 		QA.OpenFile(InputSignalFile[0]); // just one spectrum
 	}
+	// find just the name in the string so that later we can add it to the results
+	// The QCurve files start with QCV and are 18 characters long
+	QCfilename = InputSignalFile[0];
+	Int_t pos = QCfilename. find("QCV");
+	QCfilename.erase(0,pos);
+
 	QA.GetEntry(0);
     QA.CreateCanvas();
     QA.CreateHistos();
     QA.Loop();
     QA.DrawHistos();
+    QA.PrintOutput(QCfilename);
 
     theApp->Run();
 

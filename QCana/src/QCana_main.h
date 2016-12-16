@@ -17,10 +17,10 @@
 
 TString InputRootDirectory ; // the directory where the root input file is located
 TString root_infile; // the current root file
-
+//TStringQCfilename ; // gives the QCurve filename
 
 std::vector<TString> InputSignalFile ; // if there is a list of input files it will put them into vector
-
+std::string QCfilename ; // gives the QCurve filename
 
 
 
