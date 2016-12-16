@@ -191,7 +191,7 @@ Int_t QCana::DrawHistos(){
 	can1->Divide(1,2);
 	can1->cd(1);
 	//histo1->Draw("HIST P");
-	gStyle->SetOptFit(1111);
+	//gStyle->SetOptFit(1111);
 	histo1->Draw();
 	histo1->SetDirectory(0);
 
