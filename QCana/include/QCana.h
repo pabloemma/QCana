@@ -26,6 +26,7 @@
 #include <TString.h>
 #include <TF1.h>
 #include <TMath.h>
+#include <TF1Convolution.h>
 #include <Math/MinimizerOptions.h>
 
 
@@ -115,6 +116,7 @@ public :
    TF1 *FitH; // Fit function
    TF1 *FitH1; // Fit function with sinh
    TF1 *FitH2; // Fit function with pol and x^3-x
+   TF1Convolution *FitTot; // convolution of FitH and FitH1
    TString rootfilename;
 
 
@@ -187,29 +189,48 @@ Int_t QCana::DrawHistos(){
 	//histo1->Draw("HIST P");
 	gStyle->SetOptFit(1111);
 	histo1->Draw();
+	histo1->SetDirectory(0);
+
 	Fitak();
 	// now subtract the fit function
-	histo2 = (TH1D*)histo1->Clone();
-	SubtractFit(histo1);
 	can1->cd(2);
+	SubtractFit(histo1);
+
+	//	FitH1= new TF1("FitH1",FitFcn1,(FreqCenter-((ScanPoints-1.)/2.*FreqStep)),FreqCenter+((ScanPoints-1.)/2.*FreqStep),2);
+		FitH1= new TF1("FitH1",FitFcn1,FreqCenter*.9986,FreqCenter*1.0014,2);
+	    FitH1->SetParameters(1.,1.);
+		histo2->Fit(FitH1,"MRWW");
+
 	histo2->SetLineColor(1);
 	histo2->Draw();
-//	FitH1= new TF1("FitH1",FitFcn1,(FreqCenter-((ScanPoints-1.)/2.*FreqStep)),FreqCenter+((ScanPoints-1.)/2.*FreqStep),2);
-	FitH1= new TF1("FitH1",FitFcn1,FreqCenter*.9986,FreqCenter*1.0014,2);
-    FitH1->SetParameters(1.,1.);
-		histo2->Fit(FitH1,"MR");
 	    //FitH1->Draw("SAME");
 
-
-
+// Now try to use convolution
 
 	can1->Update();
+	TCanvas *c = new TCanvas();
+	c->cd();
+	FitH2= new TF1("FitH2",FitFcn2,FreqCenter*.9986,FreqCenter*1.0014,5);
+	FitH2->SetParameters(7e7,6e5,1500,1116,107);
+	histo1->Fit(FitH2,"+MRW");
+	FitH2->SetLineColor(3);
+	histo1->Draw();
+			FitH2->Draw("SAME");
+	c->Update();
+
+
+
+
+
+
 	return 0;
 }
 
 Int_t QCana::SubtractFit(TH1D *hist){
 			// subtracts the fit from the spectrum
 	// create an intermediate TH1D
+	  histo2 = (TH1D*)hist->Clone("histo2");
+
 	  histo2->Add(FitH,-1.);
 	 return 0;
 
@@ -232,7 +253,9 @@ Int_t QCana::Fitak(){
 	histo1->Fit("pol2");
 	TF1 *fitroot = histo1->GetFunction("pol2");
 	FitH->SetParameters(fitroot->GetParameter(0),fitroot->GetParameter(1),fitroot->GetParameter(2));
-	histo1->Fit(FitH,"MRWW");
+	histo1->Fit(FitH,"MRW");
+
+
 
 
 
@@ -277,7 +300,7 @@ Double_t QCana::FitFcn2(Double_t *x , Double_t *par){
 	// start polynomial and x^3-x
 
 	Double_t y = x[0]-213.00;
-     Double_t result = (par[0]+par[1]*x[0]+par[2]*pow(x[0],2.))*(par[3]*pow(y,3)-y*par[4]);
+     Double_t result = (par[0]+par[1]*x[0]+par[2]*pow(x[0],2.))-(par[3]*pow(y,3)-y*par[4]);
 	//cout<<x[0]-213<<"  "<<par[4]<<endl;
 
 	return result;
