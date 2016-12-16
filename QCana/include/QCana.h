@@ -499,7 +499,7 @@ Int_t QCana::PrintOutput(){
 
 
 		//create the file stream
-	ofstream ofil("QCurve.txt",std::ofstream::out | std::ofstream::app);
+	ofstream ofil("QCurve.csv",std::ofstream::out | std::ofstream::app);
 	// open the file
 
 
