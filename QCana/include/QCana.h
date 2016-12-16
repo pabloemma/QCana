@@ -36,6 +36,7 @@
 #include <fstream>
 #include <string>
 #include <stdio.h>
+#include <iomanip> // so that we can set the width of the numbers printed
 #include <math.h>
 #include <map>
 
@@ -120,6 +121,8 @@ public :
    TString rootfilename;
 
 
+   Double_t MinFitFunc; // x Minimum of the total fit function,
+
 
 
    QCana();
@@ -136,6 +139,7 @@ public :
    virtual int 		CreateHistos();
    virtual int		DrawHistos();
    virtual int 		SubtractFit(TH1D *);
+   virtual int      PrintOutput();
    Int_t 	OpenFile(TString);
    static Double_t FitFcn(Double_t * , Double_t *);
    static Double_t FitFcn1(Double_t * , Double_t *);  //poly and sinH
@@ -211,11 +215,16 @@ Int_t QCana::DrawHistos(){
 	TCanvas *c = new TCanvas();
 	c->cd();
 	FitH2= new TF1("FitH2",FitFcn2,FreqCenter*.9986,FreqCenter*1.0014,5);
-	FitH2->SetParameters(7e7,6e5,1500,1116,107);
+//	FitH2->SetParameters(7e7,6e5,1500,1116,107);
+	FitH2->SetParameters(FitH->GetParameter(0),FitH->GetParameter(1),FitH->GetParameter(1),FitH1->GetParameter(0),FitH1->GetParameter(1));
+
+
 	histo1->Fit(FitH2,"+MRW");
 	FitH2->SetLineColor(3);
 	histo1->Draw();
 			FitH2->Draw("SAME");
+	//determine the mimium x fof the fit function
+	MinFitFunc = FitH2->GetMinimumX(FreqCenter*.9986,FreqCenter*1.0014,1.E-10,100,false);
 	c->Update();
 
 
@@ -478,6 +487,45 @@ void QCana::Loop()
       // if (Cut(ientry) < 0) continue;
    }
 
+
+
+
+
+ }
+
+Int_t QCana::PrintOutput(){
+	// prints output of all the parameters
+	// Get Fit parameters
+
+
+		//create the file stream
+	ofstream ofil("QCurve.txt",std::ofstream::out | std::ofstream::app);
+	// open the file
+
+
+	cout<<"************************************************************************************************************************"<<endl;
+	cout<<"*"<<endl;
+	cout<<"*                                                 Result of QCana fit"<<endl;
+	cout<<"*"<<endl;
+	cout<<"*"<<endl;
+	cout.width(15);
+    cout<<"Coil number "<<NMRchan<<"  ,   ";
+    ofil<<NMRchan<<",";
+
+
+    for(Int_t k=0; k<5;k++){
+		cout<<" par" <<k<<"  "<<setw(15)<<setprecision(10)<<FitH2->GetParameter(k)<<" , ";  // no carriage return
+		ofil<<setw(10)<<setprecision(10)<<FitH2->GetParameter(k)<<",";
+	}
+	cout<<"Mimimum  "<<setw(15)<<setprecision(10)<<MinFitFunc<<" , "<<"TuneVoltage  "<<setw(15)<<setprecision(10)<<TuneV<<endl;
+	ofil<<setw(10)<<setprecision(10)<<MinFitFunc<<","<<setw(10)<<setprecision(10)<<TuneV<<endl;
+	cout<<"*"<<endl;
+
+	cout<<"*"<<endl;
+
+	cout<<"************************************************************************************************************************"<<endl;
+
+		ofil.close();
 
 
 
