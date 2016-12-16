@@ -110,9 +110,11 @@ public :
    TChain *QAchain;
    TTree *tree;
    TH1D *histo1;
+   TH1D *histo2;
    TCanvas *can1;
    TF1 *FitH; // Fit function
    TF1 *FitH1; // Fit function with sinh
+   TF1 *FitH2; // Fit function with pol and x^3-x
    TString rootfilename;
 
 
@@ -131,9 +133,11 @@ public :
    virtual int 		CreateCanvas();
    virtual int 		CreateHistos();
    virtual int		DrawHistos();
+   virtual int 		SubtractFit(TH1D *);
    Int_t 	OpenFile(TString);
    static Double_t FitFcn(Double_t * , Double_t *);
    static Double_t FitFcn1(Double_t * , Double_t *);  //poly and sinH
+   static Double_t FitFcn2(Double_t * , Double_t *);  //poly and sinH
    virtual int  Fitak();
 
 
@@ -171,29 +175,56 @@ Int_t QCana::CreateHistos(){
 	// very simple at this point all fixed values
 	histo1 = new TH1D("histo1",rootfilename, ScanPoints,FreqCenter-((ScanPoints-1.)/2.*FreqStep),FreqCenter+((ScanPoints-1.)/2.*FreqStep));
 	histo1->Sumw2();
+//	histo2 = new TH1D("histo2","subtracted histo", ScanPoints,FreqCenter-((ScanPoints-1.)/2.*FreqStep),FreqCenter+((ScanPoints-1.)/2.*FreqStep));
+//	histo2->Sumw2();
 	return 0;
 }
 
 Int_t QCana::DrawHistos(){
 	// draw histograms
-	can1->cd();
+	can1->Divide(1,2);
+	can1->cd(1);
 	//histo1->Draw("HIST P");
 	gStyle->SetOptFit(1111);
 	histo1->Draw();
 	Fitak();
+	// now subtract the fit function
+	histo2 = (TH1D*)histo1->Clone();
+	SubtractFit(histo1);
+	can1->cd(2);
+	histo2->SetLineColor(1);
+	histo2->Draw();
+//	FitH1= new TF1("FitH1",FitFcn1,(FreqCenter-((ScanPoints-1.)/2.*FreqStep)),FreqCenter+((ScanPoints-1.)/2.*FreqStep),2);
+	FitH1= new TF1("FitH1",FitFcn1,FreqCenter*.9986,FreqCenter*1.0014,2);
+    FitH1->SetParameters(1.,1.);
+		histo2->Fit(FitH1,"MR");
+	    //FitH1->Draw("SAME");
+
+
+
+
 	can1->Update();
 	return 0;
 }
+
+Int_t QCana::SubtractFit(TH1D *hist){
+			// subtracts the fit from the spectrum
+	// create an intermediate TH1D
+	  histo2->Add(FitH,-1.);
+	 return 0;
+
+}
+
 Int_t QCana::Fitak(){
 	// this is a convolution fit as from example on root tutorials
 	// it is a convolution of a 3deg pol and a sinh(x) function
 	// set fit environment
 	ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit","Minimize");
 	ROOT::Math::MinimizerOptions::SetDefaultStrategy(2);
-	ROOT::Math::MinimizerOptions::SetDefaultTolerance(.1);
+	ROOT::Math::MinimizerOptions::SetDefaultTolerance(.0001);
 	ROOT::Math::MinimizerOptions::SetDefaultPrecision(1.e-08);
 	ROOT::Math::MinimizerOptions::SetDefaultMaxIterations(100000);
-	ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(100000);
+	ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(1000000);
 
 	Int_t Npar = 3;
 	FitH= new TF1("FitH",FitFcn,FreqCenter-((ScanPoints-1.)/2.*FreqStep),FreqCenter+((ScanPoints-1.)/2.*FreqStep),Npar);
@@ -201,15 +232,17 @@ Int_t QCana::Fitak(){
 	histo1->Fit("pol2");
 	TF1 *fitroot = histo1->GetFunction("pol2");
 	FitH->SetParameters(fitroot->GetParameter(0),fitroot->GetParameter(1),fitroot->GetParameter(2));
-	histo1->Fit(FitH,"MR");
+	histo1->Fit(FitH,"MRWW");
 
-/*	FitH1= new TF1("FitH1",FitFcn1,FreqCenter-((ScanPoints-1.)/2.*FreqStep),FreqCenter+((ScanPoints-1.)/2.*FreqStep),Npar+2);
-	FitH1->SetParameters(fitroot->GetParameter(0),fitroot->GetParameter(1),fitroot->GetParameter(2),1.,1.);
-	histo1->Fit(FitH1,"MR");
-	FitH1->SetLineColor(1);
-    //FitH1->Draw("SAME");
 
-     */
+
+	/*FitH2= new TF1("FitH2",FitFcn2,FreqCenter-((ScanPoints-1.)/2.*FreqStep),FreqCenter+((ScanPoints-1.)/2.*FreqStep),Npar+2);
+	FitH2->SetParameters(fitroot->GetParameter(0),fitroot->GetParameter(1),fitroot->GetParameter(2),1.,1.);
+	histo1->Fit(FitH2,"MR");
+	FitH2->SetLineColor(1);
+    FitH2->Draw("SAME");*/
+
+
 
 
 	// Now subtract the function from the histo
@@ -231,15 +264,24 @@ Double_t QCana::FitFcn(Double_t *x , Double_t *par){
 	return result;
 }
 Double_t QCana::FitFcn1(Double_t *x , Double_t *par){
-	// start polynomial and sinh
+	// start x3-x
 
-	//Double_t result = par[0]+par[1]*x[0]+par[2]*pow(x[0],2.)+par[3]*pow(x[0],3.);
-	Double_t result = par[0]+par[1]*x[0]+par[2]*pow(x[0],2.) +par[3]*TMath::SinH(((x[0]-213.)-par[4]));
+	Double_t y = x[0]-213.00;
+     Double_t result = par[0]*pow(y,3)-y*par[1];
 	//cout<<x[0]-213<<"  "<<par[4]<<endl;
 
 	return result;
 }
 
+Double_t QCana::FitFcn2(Double_t *x , Double_t *par){
+	// start polynomial and x^3-x
+
+	Double_t y = x[0]-213.00;
+     Double_t result = (par[0]+par[1]*x[0]+par[2]*pow(x[0],2.))*(par[3]*pow(y,3)-y*par[4]);
+	//cout<<x[0]-213<<"  "<<par[4]<<endl;
+
+	return result;
+}
 
 
 
