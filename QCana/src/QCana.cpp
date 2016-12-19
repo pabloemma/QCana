@@ -16,10 +16,11 @@
 #include <stdlib.h>
 #include  <vector>
 #include <string>
+#include <cstdlib> // contaings getenv
 
 #include <iostream>
 #include "QCana.h"
-#include "QCana_main.h"     // some changes
+#include "QCana_main.h""
 
 
 
@@ -75,6 +76,22 @@ int main(Int_t argc,char *argv[],char *envp[] ) {
 	for (Int_t k=0;k < theApp->Argc();k++){  // find the filenames
 	TString temp = std::string(theApp->Argv(k));  //Argv with index is char*
 
+
+	// Get the environment, make sure it is defined. If not exit
+			if(const char* env_p = std::getenv("NMR_ROOT")){
+				NMR_ROOT = env_p;
+				cout<< QC_pr<<" your environment is "<<NMR_ROOT<<endl;
+			}
+			else{
+				cout<< QC_pr<<" your environment is not defined; most likely you need to set NMR_ROOT environment variable \n ";
+
+						cout<< " You must define it now; Good bye  \n" <<endl;
+						exit(EXIT_FAILURE);
+
+
+			}
+
+
 	if(temp.Contains(".root"))
 	{
 			InputSignalFile.push_back(InputRootDirectory+temp);
@@ -98,7 +115,7 @@ int main(Int_t argc,char *argv[],char *envp[] ) {
     QA.CreateHistos();
     QA.Loop();
     QA.DrawHistos();
-    QA.PrintOutput(QCfilename);
+    QA.PrintOutput(QCfilename,NMR_ROOT);
 
     theApp->Run();
 

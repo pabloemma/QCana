@@ -6,7 +6,7 @@
  */
 
 /*
- * NMRana_main.h
+ * QCana_main.h
  *
  *  Created on: May 10, 2016
  *      Author: klein
@@ -22,7 +22,9 @@ TString root_infile; // the current root file
 std::vector<TString> InputSignalFile ; // if there is a list of input files it will put them into vector
 std::string QCfilename ; // gives the QCurve filename
 
+std::string  NMR_ROOT ; // top directory of NMR system, needs to be defined thorugh enviro variable $NMR_ROOT
 
+std::string QC_pr = "QC_ana> ";
 
 
 

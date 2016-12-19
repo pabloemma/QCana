@@ -139,7 +139,7 @@ public :
    virtual int 		CreateHistos();
    virtual int		DrawHistos();
    virtual int 		SubtractFit(TH1D *);
-   virtual int      PrintOutput(std::string);
+   virtual int      PrintOutput(std::string, std::string);
    Int_t 	OpenFile(TString);
    static Double_t FitFcn(Double_t * , Double_t *);
    static Double_t FitFcn1(Double_t * , Double_t *);  //poly and sinH
@@ -493,7 +493,7 @@ void QCana::Loop()
 
  }
 
-Int_t QCana::PrintOutput(std::string QCfilename){
+Int_t QCana::PrintOutput(std::string QCfilename, std::string NMR_ROOT){
 	// prints output of all the parameters
 	// Get Fit parameters
 
@@ -520,6 +520,14 @@ Int_t QCana::PrintOutput(std::string QCfilename){
 	cout<<"Mimimum  "<<setw(15)<<setprecision(10)<<MinFitFunc<<" , "<<"TuneVoltage  "<<setw(15)<<setprecision(10)<<TuneV<<endl;
 	ofil<<setw(10)<<setprecision(10)<<MinFitFunc<<","<<setw(10)<<setprecision(10)<<TuneV<<endl;
 	cout<<"*"<<endl;
+
+	cout<<"*"<<"saving QCurve file in "<<NMR_ROOT+"/QC_files/"+QCfilename<<endl;
+
+	// copying file
+	std::ifstream  src(rootfilename, std::ios::binary);
+	std::ofstream  dst(NMR_ROOT+"/QC_files/"+QCfilename, std::ios::binary);
+	dst<<src.rdbuf();
+	// end copying file
 
 	cout<<"*"<<endl;
 
