@@ -499,7 +499,7 @@ Int_t QCana::PrintOutput(std::string QCfilename, std::string NMR_ROOT){
 
 
 		//create the file stream
-	ofstream ofil("QCurve.csv",std::ofstream::out | std::ofstream::app);
+	ofstream ofil("QCurve.txt",std::ofstream::out | std::ofstream::app);
 	// open the file
 
 
@@ -518,10 +518,10 @@ Int_t QCana::PrintOutput(std::string QCfilename, std::string NMR_ROOT){
 		ofil<<setw(10)<<setprecision(10)<<FitH2->GetParameter(k)<<",";
 	}
 	cout<<"Mimimum  "<<setw(15)<<setprecision(10)<<MinFitFunc<<" , "<<"TuneVoltage  "<<setw(15)<<setprecision(10)<<TuneV<<endl;
-	ofil<<setw(10)<<setprecision(10)<<MinFitFunc<<","<<setw(10)<<setprecision(10)<<TuneV<<endl;
+	ofil<<setw(10)<<setprecision(10)<<MinFitFunc<<","<<setw(10)<<setprecision(10)<<TuneV<<","<<endl;
 	cout<<"*"<<endl;
 
-	cout<<"*"<<"saving QCurve file in "<<NMR_ROOT+"/QC_files/"+QCfilename<<endl;
+	cout<<"*"<<"     saving QCurve file in "<<NMR_ROOT+"/QC_files/"+QCfilename<<endl;
 
 	// copying file
 	std::ifstream  src(rootfilename, std::ios::binary);
