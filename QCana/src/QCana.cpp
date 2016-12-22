@@ -20,7 +20,7 @@
 
 #include <iostream>
 #include "QCana.h"
-#include "QCana_main.h""
+#include "QCana_main.h"
 
 
 
