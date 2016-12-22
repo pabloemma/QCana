@@ -483,10 +483,8 @@ void QCana::Loop()
      	  freq_temp +=FreqStep;
       }
 
-
       // if (Cut(ientry) < 0) continue;
    }
-
 
 
 
@@ -515,12 +513,12 @@ Int_t QCana::PrintOutput(std::string QCfilename, std::string NMR_ROOT){
 
     for(Int_t k=0; k<5;k++){
 		cout<<" par" <<k<<"  "<<setw(15)<<setprecision(10)<<FitH2->GetParameter(k)<<" , ";  // no carriage return
-		ofil<<setw(10)<<setprecision(10)<<FitH2->GetParameter(k)<<",";
+		ofil<<setw(20)<<setprecision(15)<<FitH2->GetParameter(k)<<",";
 	}
 	cout<<"Mimimum  "<<setw(15)<<setprecision(10)<<MinFitFunc<<" , "<<"TuneVoltage  "<<setw(15)<<setprecision(10)<<TuneV<<endl;
-	ofil<<setw(10)<<setprecision(10)<<MinFitFunc<<","<<setw(10)<<setprecision(10)<<TuneV<<","<<endl;
+	Double_t temp = ScanNumber;
+	ofil<<setw(10)<<setprecision(10)<<MinFitFunc<<","<<setw(10)<<setprecision(10)<<TuneV<<","<<temp<<","<<setw(4)<<Gain<<","<<endl;
 	cout<<"*"<<endl;
-
 	cout<<"*"<<"     saving QCurve file in "<<NMR_ROOT+"/QC_files/"+QCfilename<<endl;
 
 	// copying file
@@ -528,14 +526,14 @@ Int_t QCana::PrintOutput(std::string QCfilename, std::string NMR_ROOT){
 	std::ofstream  dst(NMR_ROOT+"/QC_files/"+QCfilename, std::ios::binary);
 	dst<<src.rdbuf();
 	// end copying file
-
+    cout<<"value for 212.71 :"<<FitH2->Eval(212.71)<<"value for 213.26 : "<<  FitH2->Eval(213.26) <<endl;
 	cout<<"*"<<endl;
 
 	cout<<"************************************************************************************************************************"<<endl;
 
 		ofil.close();
 
-
+return 0;
 
 }
 
